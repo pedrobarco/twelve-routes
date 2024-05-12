@@ -1,0 +1,5 @@
+id,name,coordinates.lat,coordinates.lng,open.from,open.to
+0,Bus Station,38.705964,-8.976272,,
+1,Continente,38.694076,-8.942487,08:00,22:00
+2,Pingo Doce,38.704645,-8.957272,08:00,22:00
+3,Lidl,38.703266,-8.945655,08:00,22:00

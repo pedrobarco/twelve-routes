@@ -14,65 +14,26 @@ import StepperPanel from "primevue/stepperpanel";
 import { optimizeRoute } from "./services/ors";
 import type { ORSOptimizationResponse } from "./services/ors";
 
+interface DeliveryLocation {
+  id: number;
+  name: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  open: {
+    from: string;
+    to: string;
+  };
+  include: boolean;
+}
+
 const DEPOT_LOCATION_ID = 0;
 const OPTIMIZATION_KEY = "optimization";
 
 const activeStep = ref(0);
 const apiKey = ref("");
-const deliveryLocations = ref([
-  {
-    id: 0,
-    name: "Bus Station",
-    coordinates: {
-      lat: 38.705964,
-      lng: -8.976272,
-    },
-    open: {
-      from: "",
-      to: "",
-    },
-    include: false,
-  },
-  {
-    id: 1,
-    name: "Continente",
-    coordinates: {
-      lat: 38.694076,
-      lng: -8.942487,
-    },
-    open: {
-      from: "08:00",
-      to: "22:00",
-    },
-    include: false,
-  },
-  {
-    id: 2,
-    name: "Pingo Doce",
-    coordinates: {
-      lat: 38.704645,
-      lng: -8.957272,
-    },
-    open: {
-      from: "08:00",
-      to: "22:00",
-    },
-    include: false,
-  },
-  {
-    id: 3,
-    name: "Lidl",
-    coordinates: {
-      lat: 38.703266,
-      lng: -8.945655,
-    },
-    open: {
-      from: "08:00",
-      to: "22:00",
-    },
-    include: true,
-  },
-]);
+const deliveryLocations = ref<DeliveryLocation[]>([]);
 
 const optimization = ref<ORSOptimizationResponse | null>(null);
 
@@ -112,6 +73,32 @@ onMounted(() => {
 
 function isDepot(location: { id: number }): boolean {
   return location.id === DEPOT_LOCATION_ID;
+}
+
+async function onFileUpload(event: { files: File[] }): Promise<void> {
+  const csv = event.files[0];
+  const data = await csv.text();
+  const locations: DeliveryLocation[] = data
+    .split("\n")
+    .slice(1)
+    .map((line) => {
+      const [id, name, lat, lng, openFrom, openTo] = line.split(",");
+      return {
+        id: parseInt(id),
+        name,
+        coordinates: {
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+        },
+        open: {
+          from: openFrom,
+          to: openTo,
+        },
+        include: false,
+      };
+    })
+    .filter((l) => !isNaN(l.id) && l.name.length > 0);
+  deliveryLocations.value = locations;
 }
 
 async function findRoute(): Promise<void> {
@@ -191,8 +178,11 @@ function getRouteStepIcon(
               <span class="text-lg font-bold">Delivery Locations</span>
               <FileUpload
                 mode="basic"
-                accept="image/*"
+                accept=".csv"
                 choose-label="Import CSV"
+                auto
+                custom-upload
+                @uploader="onFileUpload"
                 :maxFileSize="1000000"
               />
             </div>
