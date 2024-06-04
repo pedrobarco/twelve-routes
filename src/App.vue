@@ -6,7 +6,7 @@ import Password from "primevue/password";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Checkbox from "primevue/checkbox";
-import FileUpload from "primevue/fileupload";
+import FileUpload, { FileUploadUploaderEvent } from "primevue/fileupload";
 import Button from "primevue/button";
 import Stepper from "primevue/stepper";
 import StepperPanel from "primevue/stepperpanel";
@@ -75,8 +75,8 @@ function isDepot(location: { id: number }): boolean {
   return location.id === DEPOT_LOCATION_ID;
 }
 
-async function onFileUpload(event: { files: File[] }): Promise<void> {
-  const csv = event.files[0];
+async function onFileUpload(event: FileUploadUploaderEvent): Promise<void> {
+  const csv = Array.isArray(event.files) ? event.files[0] : event.files;
   const data = await csv.text();
   const locations: DeliveryLocation[] = data
     .split("\n")
